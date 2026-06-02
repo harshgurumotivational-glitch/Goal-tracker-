@@ -1,0 +1,661 @@
+<!aDOCTYPE html>
+
+  <html lang="en">
+  
+  <head>
+
+    <meta charset="UTF-8" />
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>Daily Goal Tracker</title>
+  
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+    <style>
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{font-family:'DM Sans',sans-serif;background:#0a0a0f;min-height:100vh;color:#e8e6f0}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#111}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+.header{background:#0d0d15;border-bottom:1px solid #1a1a2e;padding:20px 24px 0;position:sticky;top:0;z-index:100}
+.header-inner{max-width:860px;margin:0 auto}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.header-label{font-family:'Space Mono',monospace;font-size:11px;color:#f97316;letter-spacing:.15em;margin-bottom:4px}
+.header-date{font-size:22px;font-weight:700;color:#fff}
+.ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring-wrap svg{width:80px;height:80px}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:#fff}
+.ring-label{font-size:9px;color:#666;letter-spacing:.05em}
+.tabs{display:flex;gap:4px;overflow-x:auto}
+.tab-btn{background:none;border:none;cursor:pointer;padding:10px 20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#666;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn.active{color:#f97316;border-bottom-color:#f97316}
+.tab-btn:hover:not(.active){color:#aaa}
+.content{max-width:860px;margin:0 auto;padding:24px 20px}
+.stat-row{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.stat-card{background:#13131a;border:1px solid #1e1e2e;border-radius:14px;padding:18px 22px;flex:1;min-width:120px}
+.stat-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.stat-val{font-family:'Space Mono',monospace;font-size:24px}
+.stat-sub{font-size:13px;color:#555}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.section-title{font-size:13px;color:#666;font-weight:500;letter-spacing:.05em}
+.add-btn{background:#f97316;border:none;border-radius:8px;color:#fff;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;transition:opacity .2s}
+.add-btn:hover{opacity:.85}
+.add-btn.cancel{background:#1e1e2e;color:#aaa}
+.add-form{background:#13131a;border:1px solid #f97316;border-radius:12px;padding:16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.add-form input[type=text]{flex:1;min-width:140px;background:#0a0a0f;border:1px solid #2e2e3e;border-radius:8px;color:#fff;padding:8px 12px;font-size:14px;font-family:'DM Sans',sans-serif}
+.add-form input[type=text]:focus{outline:none;border-color:#f97316}
+.num-input{width:64px;background:#0a0a0f;border:1px solid #2e2e3e;border-radius:8px;color:#fff;padding:7px 10px;font-size:13px;font-family:'Space Mono',monospace;text-align:center}
+.num-input:focus{outline:none;border-color:#f97316}
+.goal-row{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#13131a;border:1px solid #1e1e2e;border-radius:12px;margin-bottom:10px;transition:border-color .2s}
+.goal-row:hover{border-color:#2e2e4e}
+.goal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.goal-info{flex:1;min-width:0}
+.goal-name{font-size:14px;font-weight:500;color:#e8e6f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goal-bar-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.goal-bar-track{flex:1;height:5px;background:#1e1e2e;border-radius:4px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.goal-pct{font-family:'Space Mono',monospace;font-size:11px;min-width:34px}
+.hours-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.hours-input{background:#0a0a0f;border:1px solid #2e2e3e;border-radius:8px;color:#fff;padding:6px 10px;width:72px;font-size:14px;font-family:'Space Mono',monospace;text-align:center}
+.hours-input:focus{outline:none;border-color:#f97316}
+.hours-unit{font-size:12px;color:#555}
+.remove-btn{background:none;border:none;cursor:pointer;color:#444;font-size:16px;padding:2px 6px;border-radius:6px;transition:color .2s}
+.remove-btn:hover{color:#fb7185}
+.overall-wrap{margin-top:24px;background:#13131a;border-radius:14px;padding:18px 20px;border:1px solid #1e1e2e}
+.overall-header{display:flex;justify-content:space-between;margin-bottom:10px}
+.overall-title{font-size:13px;color:#888;font-weight:500}
+.overall-val{font-family:'Space Mono',monospace;font-size:13px}
+.overall-track{height:12px;background:#0a0a0f;border-radius:8px;overflow:hidden}
+.overall-fill{height:100%;background:linear-gradient(90deg,#f97316,#fb7185);border-radius:8px;transition:width .5s ease}
+
+    
+    
+    
+    /* Progress tab */
+    
+    
+    
+    
+.view-toggle{display:flex;background:#13131a;border:1px solid #1e1e2e;border-radius:8px;overflow:hidden}
+.view-toggle button{background:none;border:none;cursor:pointer;padding:7px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:#666;transition:all .2s}
+.view-toggle button.active{background:#f97316;color:#fff}
+.chart-card{background:#13131a;border:1px solid #1e1e2e;border-radius:14px;padding:20px 20px 16px;margin-bottom:18px}
+.chart-title{font-size:12px;color:#666;letter-spacing:.08em;margin-bottom:14px}
+canvas{max-width:100%}
+
+    
+    /* AI tab */
+    
+    
+    
+.ai-intro{background:linear-gradient(135deg,#1a0e00,#0f0a1a);border:1px solid #2e1a0a;border-radius:16px;padding:22px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start}
+.ai-icon{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#f97316,#fb7185);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ai-title{font-weight:700;font-size:16px;margin-bottom:4px}
+.ai-desc{color:#888;font-size:13px;line-height:1.6}
+.week-grid{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.day-chip{background:#13131a;border:1px solid #1e1e2e;border-radius:10px;padding:10px 14px;flex:1;min-width:60px;text-align:center}
+.day-chip.today{border-color:#f97316}
+.day-chip-name{font-size:11px;color:#666;margin-bottom:4px}
+.day-chip-pct{font-family:'Space Mono',monospace;font-size:14px}
+.day-chip-hrs{font-size:10px;color:#444;margin-top:2px}
+.ai-generate-btn{width:100%;background:linear-gradient(135deg,#f97316,#fb7185);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;padding:14px;cursor:pointer;transition:opacity .2s,transform .15s;margin-bottom:20px}
+.ai-generate-btn:hover{opacity:.9;transform:translateY(-1px)}
+.ai-generate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ai-result{background:#13131a;border:1px solid #1e1e2e;border-radius:14px;padding:22px}
+.ai-result-label{font-size:11px;color:#f97316;letter-spacing:.12em;margin-bottom:14px}
+.ai-content{font-size:14px;line-height:1.75;color:#ccc}
+.ai-content .ai-heading{font-weight:700;color:#f97316;margin-top:14px;margin-bottom:4px;font-size:15px}
+.ai-content .ai-bullet{display:flex;gap:8px;margin-bottom:6px}
+.ai-content .ai-bullet-arrow{color:#f97316;flex-shrink:0}
+.ai-content .ai-bullet-text{color:#bbb}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.loading-dot{display:inline-block;animation:pulse 1.2s ease-in-out infinite}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+  
+  
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-label">DAILY GOAL TRACKER</div>
+        <div class="header-date" id="headerDate"></div>
+      </div>
+      <div class="ring-wrap">
+        <svg viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#1e1e2e" stroke-width="6"/>
+          <circle id="ringCircle" cx="40" cy="40" r="32" fill="none" stroke="#f97316" stroke-width="6"
+            stroke-dasharray="0 201" stroke-linecap="round" transform="rotate(-90 40 40)"
+            style="transition:stroke-dasharray .6s ease"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="ringPct">0%</div>
+          <div class="ring-label">TODAY</div>
+        </div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(0)">🎯 Today's Goals</button>
+      <button class="tab-btn" onclick="showTab(1)">📊 Progress</button>
+      <button class="tab-btn" onclick="showTab(2)">🤖 AI Coach</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  
+  
+  
+  <!-- TAB 0: Goals -->
+  
+  
+  
+  
+  <div id="tab0">
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Hours Done</div>
+        <div class="stat-val" id="statDone" style="color:#f97316">0<span class="stat-sub" id="statTotal">/0h</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Daily Hours</div>
+        <div class="stat-val" id="statAvg" style="color:#22d3ee">0<span class="stat-sub">h</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Best Day (7d)</div>
+        <div class="stat-val" id="statBest" style="color:#a78bfa">—</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">LOG HOURS FOR EACH GOAL</div>
+      <button class="add-btn" id="addToggleBtn" onclick="toggleAddForm()">+ Add Goal</button>
+    </div>
+
+    <div class="add-form hidden" id="addForm">
+      <input type="text" id="newGoalText" placeholder="Goal name…" onkeydown="if(event.key==='Enter')addGoal()" />
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:13px;color:#666">Target:</span>
+        <input type="number" class="num-input" id="newGoalHours" value="1" min="0.5" max="12" step="0.5" />
+        <span style="font-size:13px;color:#666">h</span>
+      </div>
+      <button class="add-btn" onclick="addGoal()">Add</button>
+    </div>
+
+    <div id="goalList"></div>
+
+    <div class="overall-wrap">
+      <div class="overall-header">
+        <span class="overall-title">TODAY'S OVERALL PROGRESS</span>
+        <span class="overall-val" id="overallVal" style="color:#f97316">0% — 0h done</span>
+      </div>
+      <div class="overall-track">
+        <div class="overall-fill" id="overallFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  
+  
+  <!-- TAB 1: Progress -->
+  
+  
+  
+  <div id="tab1" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <h2 style="font-size:17px;font-weight:700;color:#fff">Work Progress</h2>
+      <div class="view-toggle">
+        <button class="active" id="weeklyBtn" onclick="setView('weekly')">Weekly</button>
+        <button id="monthlyBtn" onclick="setView('monthly')">Monthly</button>
+      </div>
+    </div>
+
+    <div class="chart-card" id="chart1Card">
+      <div class="chart-title" id="chart1Title">HOURS PER DAY — LAST 7 DAYS</div>
+      <canvas id="chart1" height="200"></canvas>
+    </div>
+    <div class="chart-card" id="chart2Card">
+      <div class="chart-title" id="chart2Title">COMPLETION % — LAST 7 DAYS</div>
+      <canvas id="chart2" height="160"></canvas>
+    </div>
+
+    <div class="stat-row" style="margin-top:18px">
+      <div class="stat-card" style="text-align:center">
+        <div class="stat-label">7-DAY AVG</div>
+        <div class="stat-val" id="p_avg" style="color:#22d3ee">0h</div>
+      </div>
+      <div class="stat-card" style="text-align:center">
+        <div class="stat-label">BEST DAY</div>
+        <div class="stat-val" id="p_best" style="color:#a78bfa">—</div>
+        <div style="font-size:11px;color:#555;margin-top:2px" id="p_bestH"></div>
+      </div>
+      <div class="stat-card" style="text-align:center">
+        <div class="stat-label">TODAY</div>
+        <div class="stat-val" id="p_today" style="color:#f97316">0%</div>
+      </div>
+    </div>
+  </div>
+
+  
+  
+  <!-- TAB 2: AI Coach -->
+  
+  
+  
+  <div id="tab2" class="hidden">
+    <div class="ai-intro">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div class="ai-title">AI Productivity Coach</div>
+        <div class="ai-desc">I'll analyze your last 7 days, spot patterns, call out mistakes, and plan your next week and month.</div>
+      </div>
+    </div>
+    <div class="week-grid" id="weekGrid"></div>
+    <button class="ai-generate-btn" id="aiBtn" onclick="fetchAI()">✦ Generate Weekly AI Analysis</button>
+    <div class="ai-result hidden" id="aiResult">
+      <div class="ai-result-label">AI ANALYSIS</div>
+      <div class="ai-content" id="aiContent"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  
+  
+  
+// ── Storage ──────────────────────────────────────────────────────────────────
+  
+  
+  const STORAGE_KEY = 'goal_tracker_data_v2';
+const COLORS = ['#f97316','#22d3ee','#a78bfa','#fb7185','#4ade80','#fbbf24'];
+
+function defaultGoals() {
+  return [
+    {id:1,text:'Physics lecture' ,targetHours:3,color:'#f97316'},
+    {id:2,text:'Chemistry lecture',targetHours:3,color:'#22d3ee'},
+    {id:3,text:'Math lecrure',targetHours:3,color:'#a78bfa'},
+    {id:4,text:'Revision',targetHours:0,color:'#fb7185',noHours:true},
+    {id:5,text:'DPP',targetHours:0,color:'#4ade80',noHours:true},
+  ];
+}
+
+function loadDB() {
+  try { const r=localStorage.getItem(STORAGE_KEY); if(r) return JSON.parse(r); } catch{}
+  return {goals:defaultGoals(),log:{}};
+}
+let db = loadDB();
+function saveDB(){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}catch{} }
+
+
+  
+  // ── Date helpers ─────────────────────────────────────────────────────────────
+
+  
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function dayName(str){ return new Date(str).toLocaleDateString('en-US',{weekday:'short'}); }
+function shortDate(str){ return new Date(str+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+
+function getLast7(){
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(); d.setDate(d.getDate()-(6-i));
+    const key=d.toISOString().slice(0,10);
+    const log=db.log[key]||{};
+    const target=db.goals.reduce((s,g)=>s+g.targetHours,0);
+    const done=db.goals.reduce((s,g)=>s+(log[g.id]||0),0);
+    return {key,label:dayName(key),date:shortDate(key),done:parseFloat(done.toFixed(1)),pct:Math.min(100,Math.round((done/target)*100)),target};
+  });
+}
+
+function getLast4Weeks(){
+  return Array.from({length:4},(_,wi)=>{
+    let total=0;
+    for(let d=0;d<7;d++){
+      const date=new Date(); date.setDate(date.getDate()-(wi*7+d));
+      const key=date.toISOString().slice(0,10);
+      const log=db.log[key]||{};
+      total+=db.goals.reduce((s,g)=>s+(log[g.id]||0),0);
+    }
+    return {label:`Week ${4-wi}`,done:parseFloat(total.toFixed(1)),avg:parseFloat((total/7).toFixed(1))};
+  }).reverse();
+}
+
+
+  
+  // ── Stats ────────────────────────────────────────────────────────────────────
+
+  
+  function computeStats(){
+  const today=todayKey();
+  const todayLog=db.log[today]||{};
+  const totalTarget=db.goals.reduce((s,g)=>s+g.targetHours,0);
+  const todayDone=db.goals.reduce((s,g)=>s+(todayLog[g.id]||0),0);
+  const todayPct=Math.min(100,Math.round((todayDone/totalTarget)*100));
+  const last7=getLast7();
+  const active=last7.filter(d=>d.done>0);
+  const avg=active.length?(active.reduce((s,d)=>s+d.done,0)/active.length).toFixed(1):0;
+  const best=last7.reduce((b,d)=>d.done>(b?.done||0)?d:b,null);
+  return {today,todayLog,totalTarget,todayDone,todayPct,last7,avg,best};
+}
+
+
+  
+  // ── Tab management ───────────────────────────────────────────────────────────
+
+  
+  
+let currentTab=0;
+let chartInstances={};
+
+function showTab(n){
+  [0,1,2].forEach(i=>{
+    document.getElementById('tab'+i).classList.toggle('hidden',i!==n);
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active',i===n);
+  });
+  currentTab=n;
+  if(n===1) renderCharts();
+  if(n===2) renderWeekGrid();
+}
+
+
+  
+  
+  // ── Header & ring ────────────────────────────────────────────────────────────
+
+  
+  
+  function updateHeader(){
+  const s=computeStats();
+  document.getElementById('headerDate').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const dashArray=`${(s.todayPct/100)*201} 201`;
+  document.getElementById('ringCircle').setAttribute('stroke-dasharray',dashArray);
+  document.getElementById('ringPct').textContent=s.todayPct+'%';
+}
+
+
+  
+  // ── Tab 0: Goals ─────────────────────────────────────────────────────────────
+
+  
+  
+  function renderGoals(){
+  const s=computeStats();
+  document.getElementById('statDone').innerHTML=`${s.todayDone.toFixed(1)}<span class="stat-sub">/${s.totalTarget}h</span>`;
+  document.getElementById('statAvg').innerHTML=`${s.avg}<span class="stat-sub">h</span>`;
+  const best=s.best;
+  document.getElementById('statBest').textContent=best?best.label+' '+best.done+'h':'—';
+
+  const list=document.getElementById('goalList');
+  list.innerHTML='';
+  db.goals.forEach(g=>{
+    const done=(s.todayLog[g.id]||0);
+    const pct = g.noHours ? (done>0?100:0) : Math.min(100,Math.round((done/g.targetHours)*100));
+    const pctColor=pct>=100?'#4ade80':'#666';
+    const div=document.createElement('div');
+    div.className='goal-row';
+    div.innerHTML=`
+      <div class="goal-dot" style="background:${g.color}"></div>
+      <div class="goal-info">
+        <div class="goal-name">${g.text}</div>
+        <div class="goal-bar-wrap">
+          <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%;background:${g.color}"></div></div>
+          <span class="goal-pct" style="color:${pctColor}">${g.noHours ? (done>0?'✓':'—') : pct+'%'}</span>
+        </div>
+      </div>
+      ${g.noHours ? `
+      <div class="hours-group">
+        <button onclick="toggleDone(${g.id},${done})"
+          style="background:${done?g.color:'#1e1e2e'};border:none;border-radius:8px;color:#fff;padding:6px 14px;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .2s">
+          ${done ? '✓ Done' : 'Mark Done'}
+        </button>
+      </div>` : `
+      <div class="hours-group">
+        <input type="number" class="hours-input" min="0" max="12" step="0.25" value="${done||''}" placeholder="0"
+          onchange="logHours(${g.id},this.value)" oninput="logHours(${g.id},this.value)" />
+        <span class="hours-unit">/${g.targetHours}h</span>
+      </div>`}
+      <button class="remove-btn" onclick="removeGoal(${g.id})" title="Remove">✕</button>
+    `;
+    list.appendChild(div);
+  });
+
+  const overallColor=s.todayPct===100?'#4ade80':'#f97316';
+  document.getElementById('overallVal').style.color=overallColor;
+  document.getElementById('overallVal').textContent=`${s.todayPct}% — ${s.todayDone.toFixed(1)}h done`;
+  document.getElementById('overallFill').style.width=s.todayPct+'%';
+  updateHeader();
+}
+
+function logHours(id,val){
+  const today=todayKey();
+  if(!db.log[today]) db.log[today]={};
+  db.log[today][id]=Math.max(0,parseFloat(val)||0);
+  saveDB(); renderGoals();
+}
+  function toggleDone(id, current){
+  const today=todayKey();
+  if(!db.log[today]) db.log[today]={};
+  db.log[today][id] = current ? 0 : 1;
+  saveDB(); renderGoals();
+}
+  
+
+function removeGoal(id){
+  db.goals=db.goals.filter(g=>g.id!==id);
+  saveDB(); renderGoals();
+}
+
+let addOpen=false;
+function toggleAddForm(){
+  addOpen=!addOpen;
+  document.getElementById('addForm').classList.toggle('hidden',!addOpen);
+  const btn=document.getElementById('addToggleBtn');
+  btn.textContent=addOpen?'✕ Cancel':'+ Add Goal';
+  btn.className='add-btn'+(addOpen?' cancel':'');
+}
+
+function addGoal(){
+  const text=document.getElementById('newGoalText').value.trim();
+  if(!text) return;
+  const hrs=parseFloat(document.getElementById('newGoalHours').value)||1;
+  db.goals.push({id:Date.now(),text,targetHours:hrs,color:COLORS[db.goals.length%COLORS.length]});
+  document.getElementById('newGoalText').value='';
+  document.getElementById('newGoalHours').value='1';
+  saveDB(); renderGoals(); toggleAddForm();
+}
+
+
+  
+  
+  
+  
+  // ── Tab 1: Charts ─────────────────────────────────────────────────────────────
+
+  
+  
+  
+  
+let currentView='weekly';
+function setView(v){
+  currentView=v;
+  document.getElementById('weeklyBtn').classList.toggle('active',v==='weekly');
+  document.getElementById('monthlyBtn').classList.toggle('active',v==='monthly');
+  renderCharts();
+}
+
+const chartDefaults={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#13131a',borderColor:'#2e2e3e',borderWidth:1,titleColor:'#fff',bodyColor:'#ccc',titleFont:{family:'DM Sans'},bodyFont:{family:'DM Sans',size:13}}},
+  scales:{
+    x:{grid:{display:false},border:{display:false},ticks:{color:'#666',font:{family:'DM Sans',size:12}}},
+    y:{grid:{color:'#1e1e2e'},border:{display:false},ticks:{color:'#666',font:{size:11}}}
+  }
+};
+
+function renderCharts(){
+  const s=computeStats();
+  const last7=getLast7();
+  const last4=getLast4Weeks();
+
+  
+  
+ // destroy old
+  
+  
+  
+  
+  ['c1','c2'].forEach(k=>{ if(chartInstances[k]){ chartInstances[k].destroy(); delete chartInstances[k]; }});
+
+  if(currentView==='weekly'){
+    document.getElementById('chart1Title').textContent='HOURS PER DAY — LAST 7 DAYS';
+    document.getElementById('chart2Title').textContent='COMPLETION % — LAST 7 DAYS';
+
+    const today=todayKey();
+    chartInstances.c1=new Chart(document.getElementById('chart1'),{
+      type:'bar',
+      data:{
+        labels:last7.map(d=>d.label),
+        datasets:[{data:last7.map(d=>d.done),backgroundColor:last7.map(d=>d.key===today?'#f97316':'#2e2e4e'),borderRadius:6}]
+      },
+      options:{...chartDefaults,maintainAspectRatio:false,
+        plugins:{...chartDefaults.plugins,tooltip:{...chartDefaults.plugins.tooltip,callbacks:{title:(i)=>last7[i[0].dataIndex].date,label:(i)=>`${i.raw}h`}}},
+        scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,max:Math.max(...last7.map(d=>d.target))+1}}}
+    });
+    chartInstances.c2=new Chart(document.getElementById('chart2'),{
+      type:'line',
+      data:{
+        labels:last7.map(d=>d.label),
+        datasets:[{data:last7.map(d=>d.pct),borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,0.08)',pointBackgroundColor:'#a78bfa',pointRadius:4,tension:0.3,fill:true}]
+      },
+      options:{...chartDefaults,maintainAspectRatio:false,
+        plugins:{...chartDefaults.plugins,tooltip:{...chartDefaults.plugins.tooltip,callbacks:{title:(i)=>last7[i[0].dataIndex].date,label:(i)=>`${i.raw}%`}}},
+        scales:{...chartDefaults.scales,y:{...chartDefaults.scales.y,max:100,ticks:{...chartDefaults.scales.y.ticks,callback:v=>v+'%'}}}}
+    });
+  } else {
+    document.getElementById('chart1Title').textContent='TOTAL HOURS — LAST 4 WEEKS';
+    document.getElementById('chart2Title').textContent='DAILY AVERAGE — LAST 4 WEEKS';
+    chartInstances.c1=new Chart(document.getElementById('chart1'),{
+      type:'bar',
+      data:{labels:last4.map(d=>d.label),datasets:[{data:last4.map(d=>d.done),backgroundColor:'#f97316',borderRadius:6}]},
+      options:{...chartDefaults,maintainAspectRatio:false,plugins:{...chartDefaults.plugins,tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:(i)=>`${i.raw}h`}}}}
+    });
+    chartInstances.c2=new Chart(document.getElementById('chart2'),{
+      type:'line',
+      data:{labels:last4.map(d=>d.label),datasets:[{data:last4.map(d=>d.avg),borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,0.08)',pointBackgroundColor:'#22d3ee',pointRadius:4,tension:0.3,fill:true}]},
+      options:{...chartDefaults,maintainAspectRatio:false,plugins:{...chartDefaults.plugins,tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:(i)=>`${i.raw}h`}}}}
+    });
+  }
+
+  const active=last7.filter(d=>d.done>0);
+  const avg=active.length?(active.reduce((s,d)=>s+d.done,0)/active.length).toFixed(1):0;
+  const best=last7.reduce((b,d)=>d.done>(b?.done||0)?d:b,null);
+  document.getElementById('p_avg').textContent=avg+'h';
+  document.getElementById('p_best').textContent=best?best.label:'—';
+  document.getElementById('p_bestH').textContent=best?best.done+'h':'';
+  document.getElementById('p_today').textContent=s.todayPct+'%';
+}
+
+
+  
+  
+  
+  
+  // ── Tab 2: AI ────────────────────────────────────────────────────────────────
+
+  
+  
+  
+  
+  function renderWeekGrid(){
+  const last7=getLast7();
+  const today=todayKey();
+  const grid=document.getElementById('weekGrid');
+  grid.innerHTML='';
+  last7.forEach(d=>{
+    const chip=document.createElement('div');
+    chip.className='day-chip'+(d.key===today?' today':'');
+    const pctColor=d.pct>=100?'#4ade80':d.pct>=60?'#f97316':'#555';
+    chip.innerHTML=`<div class="day-chip-name">${d.label}</div><div class="day-chip-pct" style="color:${pctColor}">${d.pct}%</div><div class="day-chip-hrs">${d.done}h</div>`;
+    grid.appendChild(chip);
+  });
+}
+
+async function fetchAI(){
+  const btn=document.getElementById('aiBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="loading-dot">●</span> <span class="loading-dot" style="animation-delay:.2s">●</span> <span class="loading-dot" style="animation-delay:.4s">●</span> Analyzing your week…';
+  document.getElementById('aiResult').classList.add('hidden');
+
+  const last7=getLast7();
+  const s=computeStats();
+  const goalList=db.goals.map(g=>`- ${g.text}: target ${g.targetHours}h/day`).join('\n');
+  const summary=last7.map(d=>`${d.label} (${d.date}): ${d.done}h / ${d.target}h (${d.pct}%)`).join('\n');
+  const active=last7.filter(d=>d.done>0);
+  const avg=active.length?(active.reduce((s,d)=>s+d.done,0)/active.length).toFixed(1):0;
+  const best=last7.reduce((b,d)=>d.done>(b?.done||0)?d:b,null);
+
+  const prompt=`You are a productivity coach. Here's my weekly goal tracker data:\n\nGoals:\n${goalList}\n\nLast 7 days progress:\n${summary}\n\nAverage daily hours: ${avg}h\nBest day: ${best?best.label+' ('+best.done+'h)':'None'}\nToday's completion: ${s.todayPct}%\n\nPlease provide:\n1. **This Week Summary** — what I accomplished (be specific with numbers)\n2. **Key Mistakes / Gaps** — where I underperformed and possible reasons\n3. **Recommended Goals for Next Week** — specific, measurable suggestions\n4. **Monthly Focus** — one big priority for the coming month\n\nKeep it sharp, direct, and motivating. Use bullet points.`;
+
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    const text=data.content?.map(b=>b.text||'').join('')||'No response.';
+    renderAIText(text);
+  } catch(e){
+    renderAIText('⚠️ Could not reach AI. Check your connection or API key.');
+  }
+
+  btn.disabled=false;
+  btn.textContent='✦ Regenerate Analysis';
+}
+
+function renderAIText(text){
+  const el=document.getElementById('aiContent');
+  el.innerHTML='';
+  text.split('\n').forEach(line=>{
+    if(!line.trim()){ const br=document.createElement('div'); br.style.height='8px'; el.appendChild(br); return; }
+    if(/^\*\*.*\*\*$/.test(line.trim())){
+      const h=document.createElement('div'); h.className='ai-heading'; h.textContent=line.replace(/\*\*/g,''); el.appendChild(h); return;
+    }
+    if(/^\*\*(.*)\*\*/.test(line)){
+      const p=document.createElement('p'); p.innerHTML=line.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#f97316">$1</strong>'); el.appendChild(p); return;
+    }
+    if(line.startsWith('- ')||line.startsWith('• ')){
+      const d=document.createElement('div'); d.className='ai-bullet';
+      d.innerHTML=`<span class="ai-bullet-arrow">›</span><span class="ai-bullet-text">${line.slice(2)}</span>`;
+      el.appendChild(d); return;
+    }
+    if(/^\d\./.test(line)){
+      const d=document.createElement('div'); d.className='ai-bullet';
+      d.innerHTML=`<span class="ai-bullet-arrow">${line[0]}.</span><span class="ai-bullet-text">${line.slice(2)}</span>`;
+      el.appendChild(d); return;
+    }
+    const p=document.createElement('p'); p.style.color='#bbb'; p.textContent=line; el.appendChild(p);
+  });
+  document.getElementById('aiResult').classList.remove('hidden');
+}
+
+
+  
+ // ── Init ─────────────────────────────────────────────────────────────────────
+
+  
+updateHeader();
+renderGoals();
+</script>
+</body>
+</html>
+  
